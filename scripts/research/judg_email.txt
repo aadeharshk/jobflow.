@@ -1,0 +1,66 @@
+# name|relevance/20|code/15|security/10|cloudflare/10|decision|purpose|data sources & integrations|security & privacy notes|reusable modules|limitations / reasons not to reuse
+googleapis/google-api-nodejs-client|16|13|9|3|Reference|Official Google APIs Node.js client (includes Gmail)|All Google APIs via gaxios|Official, SECURITY.md|Gmail API type definitions & request shapes|Depends on Node APIs (gaxios, http agents); heavy; Workers needs nodejs_compat and still bloats bundle. Call Gmail REST with fetch instead
+googleapis/google-auth-library-nodejs|13|13|9|3|Reference|Official Google OAuth2/service-account auth library for Node|Google OAuth endpoints|Official|Token refresh semantics reference|Node-specific; use Web-standard OAuth (oauth4webapi/arctic) on Workers
+nodemailer/nodemailer|14|13|9|2|Reference|De-facto Node SMTP sending library with attachments and MIME|SMTP, SES, sendmail|MIT; mature; SECURITY.md|MIME building concepts|Requires Node net/tls sockets; not Workers-native. Gmail API send avoids SMTP entirely
+nodemailer/mailparser|13|12|8|3|Reference|Streaming MIME parser for Node|Raw RFC822|MIT; mature|—|Node streams; use postal-mime (same author) on Workers
+postalsys/imapflow|11|13|8|4|Reference|Modern IMAP client (used by EmailEngine)|IMAP servers|MIT; 135 tests|—|Long-lived TCP sessions don't fit Workers request model; Gmail API preferred
+postalsys/emailengine|13|12|8|2|Avoid (licence)|Self-hosted email API over IMAP/SMTP/Gmail/Graph with webhooks|IMAP, Gmail API, MS Graph; Redis|Commercial EmailEngine licence (v3.0, Nov 2026)|Webhook event taxonomy as design reference|Commercial licence; Redis + long-running Node server
+postalsys/postal-mime|17|12|9|10|Reuse (dependency)|MIME email parser for browsers and serverless (Workers-compatible)|Raw RFC822 / Email Workers|MIT; zero Node deps|Parse raw Gmail messages (format=raw) incl. attachments & headers (Message-ID, In-Reply-To, References)|Parser only
+postalsys/mailauth|8|12|8|5|Reference|SPF/DKIM/DMARC/ARC/BIMI verification and signing|DNS|MIT; 172 tests|Deliverability diagnostics (domain checks)|Not needed when sending via user's Gmail
+postalserver/postal|9|11|8|1|Avoid|Self-hosted mail delivery platform (Ruby)|SMTP; MariaDB; RabbitMQ|MIT; SECURITY.md|Bounce/webhook design ideas|Server infrastructure outside Cloudflare; JobFlow sends from user's Gmail
+knadh/listmonk|8|12|8|1|Avoid|Self-hosted newsletter & mailing-list manager (Go)|SMTP; Postgres|AGPL-3.0|Template/campaign ideas|Bulk marketing tool; wrong model for 1:1 applications
+n8n-io/n8n|11|13|8|1|Reference|Workflow automation platform with Gmail nodes|400+ integrations|Sustainable Use License (not OSI open source)|Gmail node behaviour as reference; users can integrate via webhook|Licence restricts commercial embedding; heavy server
+elie222/inbox-zero|17|13|8|3|Reference (AGPL)|AI email assistant for Gmail/Outlook: rules, categorisation, reply tracking, cold-email blocking|Gmail API (history, watch/PubSub), MS Graph; Prisma/Postgres; LLMs|AGPL-3.0 + additional terms; CASA-scale security work|Gmail history sync, batch-with-retry, thread completion, label management, reply-tracking concepts (apps/web/utils/gmail/*)|AGPL: copying would force AGPL on JobFlow SaaS. Use as architectural reference only
+cloudflare/agentic-inbox|15|10|8|10|Adapt|Self-hosted email client with AI agent running entirely on Cloudflare (Email Routing, DO, Workers AI)|Cloudflare Email Service binding, Durable Objects (SQLite), Workers AI, postal-mime|Apache-2.0; official Cloudflare; no tests in tree|Durable-Object-per-mailbox pattern, email-sender.ts, agent tool wiring, Drizzle on DO SQLite|Built for domain mailboxes, not Gmail OAuth; no tests; last commit Apr 2026
+zou-yu/worker-mailer|11|10|8|10|Reference|SMTP client for Workers via cloudflare:sockets|Any SMTP server|MIT; tests + CI|Socket-based SMTP if a non-Gmail provider is later supported|Gmail SMTP needs app passwords/XOAUTH2; Gmail API is cleaner
+Sh4yy/cloudflare-email|8|5|5|9|Avoid|Proxy for free transactional email via MailChannels on Workers|MailChannels (free tier ended 2024)|No tests|—|Dependent on discontinued free MailChannels path
+mibgb65-cloud/OmniMail|11|9|7|10|Reference|Multi-domain webmail on Workers, D1, R2, Queues|Cloudflare Email Routing, D1, R2, Queues|221 tests|D1 schema for messages/threads, R2 attachment storage, Queue consumers|Domain-mail product, not Gmail; MIT so adaptable
+choyiny/saasmail|12|11|8|10|Adapt|Self-hosted email for SaaS teams on Workers (Hono, Drizzle, D1)|Cloudflare Email Routing; D1; Hono|Apache-2.0; 174 tests; SECURITY.md|Hono + Drizzle + D1 project structure, thread grouping, Playwright E2E setup|Not Gmail-based
+oiov/vmail|8|7|6|10|Reference (GPL)|Temporary mailbox on Workers + D1|Email Routing; D1; Drizzle|GPL-3.0|Email Worker ingestion pattern|GPL; temp-mail use case
+akazwz/smail|7|7|6|9|Reference|Temporary email with real-time inbox on Workers|Email Routing; DO|No tests|Realtime inbox via DO WebSocket|Temp-mail use case
+KartikTalwar/gmail.js|7|8|6|3|Avoid|Browser-extension API for Gmail web UI DOM|Gmail web UI internals|Relies on undocumented Gmail UI internals|—|Brittle, unofficial
+GAM-team/got-your-back|9|8|8|1|Reference|CLI to back up/restore Gmail via Gmail API|Gmail API|Apache-2.0|Batch/backoff handling for Gmail API quotas|Python CLI
+jeremyephron/simplegmail|10|7|7|1|Reference|Simple Python Gmail API client|Gmail API|MIT|Query builder ideas for Gmail search syntax|Python
+mscdex/node-imap|6|6|6|1|Avoid|Legacy Node IMAP client|IMAP|Unmaintained since 2022|—|Stale
+eleith/emailjs|9|9|7|2|Reference|SMTP sending with HTML and attachments for Node|SMTP|MIT; 23 tests|MIME composition ideas|Node sockets
+forwardemail/email-templates|12|9|7|4|Reference|Create, preview and send templated emails|Nodemailer; Pug etc.|MIT|Template preview/workflow ideas|Node-oriented; we use simpler template engine
+forwardemail/forwardemail.net|9|11|8|1|Avoid (licence)|Privacy-focused email service codebase|Full mail stack|MPL-2.0 + BSL portions|—|Licence mix; full ESP
+mjmlio/mjml|8|10|8|5|Reference|Responsive HTML email markup language|—|MIT|—|Application emails should be plain/light HTML personal messages, not marketing layouts
+resend/react-email|11|12|8|8|Reuse (system emails)|React components for building and previewing emails|Any sender|MIT; 238 tests|Transactional/system notification templates (digests, alerts)|Not for personal application emails (plain text is better for deliverability)
+github/email_reply_parser|14|9|8|6|Adapt|Strips quoted replies/signatures from plain-text email|—|MIT; Ruby|Algorithm for isolating new reply text (port to TS)|Ruby; English-centric heuristics
+zapier/email-reply-parser|12|7|8|5|Reference|Python port of email_reply_parser|—|MIT; last commit 2020|—|Stale
+mailgun/flanker|9|8|7|1|Reference|Python email-address and MIME parsing|—|Apache-2.0; no CI|Address validation rules|Python
+mailgun/talon|14|8|7|3|Reference|Quotation & signature extraction (ML + heuristics)|—|Apache-2.0|Signature detection heuristics|Python, scikit-learn
+crisp-oss/email-reply-parser|16|11|8|10|Reuse (dependency)|TypeScript reply parser (quotes/signatures) with 350 tests, multilingual|—|MIT; pure TS; well tested|Extract new reply body before classification|Heuristic; fallback to LLM for edge cases
+dittofeed/dittofeed|7|10|7|2|Avoid|Customer-engagement/journey automation platform|ClickHouse, Postgres, Temporal|MIT|Journey-state ideas|Marketing automation; heavy stack
+Notifuse/notifuse|7|11|8|1|Avoid (licence)|Self-hosted newsletter/transactional platform (Go)|SMTP/ESP; Postgres|BSL 1.1|—|Source-available licence
+mettle/sendportal|7|8|7|1|Avoid|Self-hosted email marketing (Laravel)|ESPs|MIT|—|Bulk marketing model
+Billionmail/BillionMail|6|8|6|1|Avoid|Mail server + newsletter platform|SMTP stack|AGPL-3.0|—|Bulk mail; AGPL
+stalwartlabs/stalwart|6|13|9|1|Avoid|All-in-one mail & collaboration server (Rust)|SMTP/IMAP/JMAP|AGPL-3.0 / SEL dual|—|Mail server, out of scope
+haraka/Haraka|6|11|8|1|Avoid|Event-driven SMTP server|SMTP|MIT|—|Server infra
+maildev/maildev|8|9|8|3|Reuse (dev only)|Local SMTP catcher + web UI for testing|SMTP|MIT|Local dev email testing|Dev tool only
+axllent/mailpit|9|12|9|3|Reuse (dev only)|Modern email testing tool with API|SMTP; API|MIT; SECURITY.md; 132 tests|Local dev email testing in docker-compose (optional)|Dev tool only
+pimalaya/himalaya|7|11|8|1|Reference|CLI email client (Rust)|IMAP/SMTP/Maildir|MIT|—|CLI
+Foundry376/Mailspring|8|11|8|1|Reference (GPL)|Desktop mail client|IMAP/SMTP|GPL-3.0|Thread UI ideas|GPL desktop app
+simonrob/email-oauth2-proxy|8|7|8|1|Reference|IMAP/SMTP proxy adding OAuth 2.0 to legacy clients|Google/Microsoft OAuth|Apache-2.0|XOAUTH2 flow reference|Desktop proxy
+ikvk/imap_tools|7|9|7|1|Reference|Python IMAP helper|IMAP|Apache-2.0; 645 tests|—|Python
+rustmailer/rustmailer|9|8|5|1|Avoid (licence)|Email middleware over IMAP/SMTP/Gmail/Graph|Gmail, Graph|Custom restrictive licence|—|Proprietary-style licence
+rustmailer/bichon|7|9|6|1|Avoid|Rust email archiver with web UI|IMAP|AGPL-3.0|Full-text search design|AGPL
+codefuturist/email-mcp|10|11|8|3|Reference (LGPL)|MCP server with IMAP+SMTP, scheduling, AI triage|IMAP/SMTP|LGPL-3.0; SECURITY.md; 81 tests|Scheduling + triage tool design|LGPL; Node sockets
+nikolausm/imap-mcp-server|9|10|8|3|Reference|IMAP/SMTP MCP server for AI assistants|IMAP/SMTP|MIT; 45 tests|—|Node sockets
+eracle/OpenOutreach|10|7|4|1|Avoid|AI agent for B2B lead generation via LinkedIn automation|LinkedIn automation|Automates LinkedIn — ToS risk|—|Non-compliant for JobFlow
+warmbly/warmbly|9|10|4|3|Avoid|Cold outreach + email warm-up service|Multiple mailboxes|Warm-up networks manipulate reputation signals; spam risk|Throttling ideas only|Contradicts JobFlow anti-spam principles
+PaulleDemon/Email-automation|9|5|5|1|Avoid|Cold email outreach tool (Django)|SMTP|AGPL + extra clauses|—|AGPL; no tests
+dahlia/upyo|12|11|8|9|Reference|Cross-runtime TypeScript email sending library (SMTP, Mailgun, SES, Resend…)|ESP APIs|MIT; 123 tests; SECURITY.md|Transport abstraction pattern; could send system mail|No Gmail-API transport for user mailboxes
+laudspeaker/laudspeaker|6|9|7|1|Avoid|Customer engagement/journey platform|ESPs|MIT + EE portions|—|Marketing automation
+jstedfast/MimeKit|7|13|9|1|Reference|.NET MIME library with S/MIME/PGP|—|MIT|RFC-correctness reference|.NET
+jhillyerd/enmime|7|11|8|1|Reference|Go MIME encode/decode|—|MIT|—|Go
+mat-sz/letterparser|10|7|7|9|Reference|Isomorphic TS email parser|—|BSD-3-Clause-Clear; stale since 2024|—|postal-mime is better maintained
+pilcrowonpaper/arctic|15|10|9|10|Reuse (dependency)|Minimal OAuth 2.0 clients for 50+ providers incl. Google, runtime-agnostic|Google OAuth|MIT; Web Crypto/fetch only|Google authorization-code + PKCE + refresh-token flow on Workers|Thin; no tests in tree (tests in separate packages)
+panva/oauth4webapi|14|13|10|10|Reuse (alternative)|Spec-compliant OAuth 2/OIDC client for any Web-standard runtime|Any OAuth/OIDC server|MIT; OpenID certified; SECURITY.md|ID-token validation if OIDC sign-in is needed|Lower-level API than arctic
+reacherhq/check-if-email-exists|10|9|5|2|Avoid|SMTP-probe email verification|SMTP RCPT probing|Probing mail servers can be abusive and is often blocked; AGPL|—|Use only publicly listed addresses; never guess-and-probe
+s1t5/mail-archiver|7|9|8|1|Reference (GPL)|Web app archiving/searching email|IMAP/M365|GPL-3.0|Search UX|GPL; C#
+Lakshay1509/NeatMail|13|8|6|3|Avoid (licence)|AI Gmail/Outlook assistant tracking promises and follow-ups|Gmail API, Prisma, OpenAI|Elastic License 2.0 (no SaaS hosting)|Follow-up detection idea|ELv2 forbids offering as managed service
+skyphusion-labs/postern|11|11|8|10|Reference (AGPL)|Self-hostable email for humans and agents on Cloudflare|Email Routing, D1, R2|AGPL-3.0; 250 tests|Workers mail architecture|AGPL
+sendgrid/sendgrid-nodejs|7|9|8|5|Avoid|SendGrid API library|SendGrid|MIT|—|Third-party ESP; JobFlow sends from user's Gmail
+resend/resend-node|8|10|8|9|Reuse (system emails, optional)|Resend API SDK (fetch-based)|Resend|MIT|Platform notifications (sign-in links, digests) if Cloudflare Email Service unavailable|External ESP, optional

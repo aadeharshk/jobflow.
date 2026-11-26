@@ -1,0 +1,62 @@
+job|linkedin job search
+job|linkedin jobs scraper
+job|ai job search agent
+job|job application agent llm
+job|job aggregator
+job|job scraper indeed glassdoor
+job|remote jobs
+job|career page crawler
+job|greenhouse lever ashby jobs
+job|greenhouse api jobs
+job|workday jobs scraper
+job|ats job board scraper
+job|job recommendation system
+job|resume job matching
+job|resume tailoring ai
+job|cover letter generator ai
+job|auto apply jobs
+job|easy apply bot
+job|job application tracker
+job|recruiter email finder
+job|job alerts notification
+job|playwright job automation
+job|mcp job search
+job|jobs api
+job|job board open source
+job|resume parser
+job|ats resume checker
+job|job hunting
+email|gmail api
+email|google oauth2 node
+email|send email nodejs
+email|email scheduler queue
+email|email reply detection
+email|email thread parser
+email|email parser
+email|email classification machine learning
+email|imap client
+email|smtp server
+email|email attachments
+email|email templates
+email|ai email assistant
+email|email follow up automation
+email|email bounce handling
+email|email tracking open pixel
+email|email marketing self-hosted
+email|inbox zero
+email|email agent llm
+email|email workflow automation
+email|email search self-hosted
+email|cold email outreach
+email|cloudflare email worker
+email|mime parser javascript
+ai|browser automation ai agent
+ai|llm agent framework typescript
+ai|cloudflare workers ai agent
+ai|structured output llm extraction
+cf|cloudflare d1 orm
+cf|cloudflare workers hono
+cf|cloudflare queues
+cf|cloudflare r2 upload
+cf|cloudflare workers saas template
+cf|cloudflare durable objects

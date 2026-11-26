@@ -1,0 +1,52 @@
+# name|relevance/20|code/15|security/10|cloudflare/10|decision|purpose|data sources & integrations|security & privacy notes|reusable modules|limitations / reasons not to reuse
+browser-use/browser-use|12|11|6|2|Reference|Python framework letting LLMs drive a browser|Playwright/CDP; LLM providers|Powerful automation; must be user-supervised|Agent-browser loop concepts|Python; not for automated third-party submissions
+microsoft/playwright|14|15|9|5|Reuse (testing)|Browser automation & E2E testing|Chromium/Firefox/WebKit|Apache-2.0; industry standard|E2E tests for JobFlow UI|Use for tests; production browser work via Browser Rendering only
+vercel-labs/agent-browser|9|10|6|2|Reference|Browser automation CLI for AI agents (Rust)|CDP|Apache-2.0|—|CLI tool
+nanobrowser/nanobrowser|11|10|7|2|Reference|Browser-extension AI agent using the user's own logged-in browser|User's browser; LLMs|Runs locally in user's browser — consent model fits "user-authorised" workflows|Extension architecture for user-approved form assist (future)|Extension, not server
+magnitudedev/browser-agent|9|9|6|2|Reference|Vision-first browser agent|Playwright|Apache-2.0; stale since Feb 2026|—|Stale
+cloudflare/agents|15|13|8|10|Reuse (dependency)|Cloudflare Agents SDK: stateful agents on Durable Objects, scheduling, MCP|Durable Objects, Workers AI|Official; 890 tests|Per-user agent DO with built-in scheduling (follow-up timers), MCP server support|Fast-moving API; pin versions
+vercel/ai|16|14|9|9|Reuse (dependency)|AI SDK: provider-agnostic text/structured generation, tool calls|OpenAI, Anthropic, Google, Workers AI (via workers-ai-provider)|Apache-2.0; 1.5k tests|generateObject with Zod schemas for matching, resume extraction, email drafting|Large surface; import only core + providers
+mastra-ai/mastra|11|12|8|6|Reference|TypeScript agent/workflow framework|Many LLMs; Hono|Apache-2.0 + ee/ portions|Workflow DSL ideas|Extra abstraction not needed for v1
+langchain-ai/langgraphjs|10|12|8|6|Reference|Graph-based agent orchestration (TS)|LangChain|MIT|—|Heavier than needed
+langchain-ai/langchain|8|12|8|1|Avoid|Python LLM application framework|Many|MIT|—|Python; abstraction overhead
+unjs/unpdf|17|11|8|10|Reuse (dependency)|Serverless-friendly PDF.js build for text extraction (Workers-compatible)|pdf.js|MIT; wrangler tests|Resume PDF text extraction inside Workers|Text-only; scanned PDFs need OCR
+mozilla/pdf.js|12|15|9|5|Reference|Reference PDF renderer/parser|—|Apache-2.0|Underlying engine of unpdf|Use via unpdf in Workers
+firecrawl/firecrawl|10|12|6|4|Reference (AGPL)|Web-to-LLM-ready crawling API|Self-host or cloud|AGPL-3.0|Career-page extraction ideas|AGPL; external service
+apify/crawlee|10|14|6|2|Reference|Node crawling/scraping framework|Playwright/Puppeteer, includes stealth/fingerprint tooling|Apache-2.0; ships anti-detection features JobFlow must not use|Polite-crawling (robots, concurrency, retries) concepts|Node runtime; evasion features
+mozilla/readability|13|12|9|9|Reuse (dependency)|Extract main content from HTML pages|—|Apache-2.0; 396 tests|Clean job-description extraction from career pages (with linkedom)|Needs DOM implementation (linkedom) in Workers
+colinhacks/zod|15|14|9|10|Reuse (dependency)|TypeScript schema validation|—|MIT|API validation, LLM structured outputs, env validation|—
+567-labs/instructor-js|9|9|8|8|Avoid|Structured LLM outputs for TS|OpenAI|MIT; stale since Jan 2025|—|Superseded by AI SDK generateObject
+microsoft/markitdown|11|11|9|1|Reference|Convert PDF/DOCX/etc. to Markdown (Python)|—|MIT|DOCX handling approach|Python
+Unstructured-IO/unstructured|11|12|8|1|Reference|Document parsing/ETL for LLMs (Python)|—|Apache-2.0|—|Python; heavy
+activepieces/activepieces|9|12|8|1|Reference|Open-source automation platform (Zapier alternative)|200+ pieces|MIT + ee/|Webhook integration patterns|Heavy server
+triggerdotdev/trigger.dev|10|13|8|3|Reference|Background jobs & durable workflows platform|Own runtime|Apache-2.0|Retry/backoff & idempotency patterns|Cloudflare Queues + DO cover our needs
+PostHog/posthog|10|13|8|3|Reference|Product analytics, feature flags, session replay|Self-host/cloud|MIT + ee/|Activation/retention event taxonomy|External infra; v1 uses first-party D1 events (+ optional Workers Analytics Engine)
+umami-software/umami|9|12|9|3|Reference|Privacy-friendly web analytics|Postgres/MySQL|MIT|Cookieless landing-page analytics model|Needs DB outside CF; Cloudflare Web Analytics is free alternative
+plausible/analytics|8|13|9|1|Avoid|Privacy-friendly web analytics (Elixir)|ClickHouse|AGPL-3.0|—|AGPL; infra outside CF
+meilisearch/meilisearch|9|14|8|1|Reference|Search engine (Rust)|—|MIT + BSL EE|Ranking-rules design|Server infra; D1 FTS5 suffices for v1
+typesense/typesense|8|13|8|1|Reference|Typo-tolerant search engine|—|GPL-3.0|—|Server infra
+stanfordnlp/dspy|8|12|8|1|Reference|Programming (not prompting) LMs; prompt optimisation|—|MIT|Evaluation-driven prompt iteration|Python
+huggingface/transformers.js|10|13|9|5|Reference|Run transformer models in JS|ONNX|Apache-2.0|—|Workers AI embeddings are simpler on CF
+cheeriojs/cheerio|12|13|9|8|Reuse (dependency)|Fast HTML parsing/selection|—|MIT|Parse career-page HTML for JobPosting JSON-LD and ATS links|Needs nodejs_compat for some builds; HTMLRewriter is native alternative
+cloudflare/workers-sdk|18|14|9|10|Reuse (tooling)|Wrangler CLI, Miniflare, Vitest pool, create-cloudflare|Workers platform|Official|Local dev, D1 migrations, vitest-pool-workers testing|—
+cloudflare/workerd|12|15|9|10|Reference|Open-source Workers runtime|—|Official|Runtime behaviour reference|—
+cloudflare/templates|15|11|8|10|Adapt|Official Workers templates (React+Vite SPA, D1, R2, Queues, DO)|Workers platform|Official|React SPA + Worker API + D1 starter structure|Templates vary in testing depth
+cloudflare/chanfana|14|12|8|10|Reuse (dependency)|OpenAPI 3.1 generation/validation for Hono on Workers|Hono, Zod|MIT; 35 tests|Auto-generated API docs (docs/api) from route schemas|—
+honojs/hono|18|14|9|10|Reuse (dependency)|Ultrafast Web-standard router, first-class on Workers|—|MIT; widely adopted|API routing, middleware (CORS, secure headers, CSRF, rate limiting hooks)|—
+drizzle-team/drizzle-orm|17|13|8|10|Reuse (dependency)|Type-safe TypeScript ORM with D1 driver and migrations|D1, SQLite|Apache-2.0|Schema definitions, typed queries, drizzle-kit migrations for D1|Some D1 limitations (no interactive transactions — use batch)
+kysely-org/kysely|12|13|9|8|Reference|Type-safe SQL query builder|SQLite/Postgres|MIT|Alternative to Drizzle|Drizzle chosen for migrations tooling
+aidenwallis/kysely-d1|8|7|7|10|Reference|Kysely dialect for D1|D1|MIT; no tests|—|Small, older
+better-auth/better-auth|16|13|9|9|Reuse (dependency)|Framework-agnostic TS auth: sessions, OAuth, rate limiting|Google OAuth etc.; Drizzle adapter|MIT; 708 tests; SECURITY.md|Session management + Google sign-in on D1 via Drizzle adapter|Gmail API scopes/tokens still need dedicated encrypted storage
+zpg6/better-auth-cloudflare|12|9|7|10|Reference|Integration of better-auth with Workers, D1, KV, R2|Cloudflare bindings|MIT; 34 tests|D1 + Drizzle wiring example|Community project; pin versions
+cloudflare/actors|9|9|7|10|Reference|Helper library for Durable Objects|DO|MIT|Alarm/scheduling helpers|Agents SDK covers needs
+cloudflare/queues-web-crawler|11|7|8|10|Adapt|Example crawler using Queues + Browser Rendering + KV|Queues, Browser Rendering|Apache-2.0; archived-era example (2024)|Queue fan-out crawl pattern with per-domain politeness|Example quality; no tests
+cloudflare/workers-oauth-provider|10|11|9|10|Reference|OAuth 2.1 provider library for Workers (for MCP servers)|KV|Official; SECURITY.md|Token encryption-at-rest approach (props encrypted with grant-derived keys)|We are OAuth client to Google, not provider (until JobFlow MCP)
+cloudflare/playwright|10|13|8|10|Reuse (optional)|Playwright fork running on Browser Rendering|Browser Rendering|Official|Render JS-only career pages on Cloudflare (user-initiated or allowlisted)|Billing per browser-hour; must respect robots/ToS
+G4brym/workers-qb|10|9|7|10|Reference|Zero-dependency query builder for D1/DO SQLite|D1|MIT; 26 tests|—|Drizzle preferred
+ottabase/ottabase|11|10|8|10|Reference|Full-stack SaaS monorepo for Workers (auth, RBAC, multi-tenant)|D1, R2, Queues|MIT; 505 tests; SECURITY.md|Multi-tenant SaaS structure on Workers|Young project
+supermemoryai/backend-api-kit|9|7|6|10|Reference|Hono + Drizzle + D1 API starter|D1|MIT; stale (Feb 2025)|Minimal structure|Stale
+mirza-rizvi/ResolveHQ|11|10|8|10|Reference (licence)|Helpdesk on Workers with D1, R2, Queues, Email Routing|Cloudflare stack|Source-available licence (internal use only)|Architecture reference|Cannot reuse code commercially
+elliothux/open-compute|8|11|8|7|Reference|Self-hosted Workers-compatible platform|—|Apache-2.0|Portability escape hatch|Not needed
+cloudflare/workers-rs|6|12|9|10|Avoid|Rust SDK for Workers|—|Official|—|TypeScript chosen for contributor reach
+cloudflare/cloudflare-docs|14|10|9|10|Reference|Official Cloudflare documentation source|—|Official|Limits/pricing/config references (cited in docs)|—
+G4brym/workers-research|9|9|7|10|Reference|Deep-research agent on Workers + Workflows + Browser Rendering|Workers AI, Browser Rendering|MIT; 12 tests|Workflows-based long-running pipeline example|Stale since Mar 2026
