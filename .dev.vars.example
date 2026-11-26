@@ -1,0 +1,18 @@
+# Local development secrets for `wrangler dev`. Copy to `.dev.vars` (git-ignored).
+# NEVER commit real values. In staging/production set these with `wrangler secret put <NAME>`.
+
+# Local overrides of [vars]
+ENVIRONMENT="development"
+APP_URL="http://localhost:8787"
+# Enables POST /api/auth/dev-login (passwordless local sign-in). Refused when ENVIRONMENT=production.
+AUTH_DEV_LOGIN="true"
+
+# Google OAuth 2.0 client (Web application). Authorized redirect URI:
+#   http://localhost:8787/api/auth/google/callback
+# Sign-in uses only: openid email profile. (Gmail send scope is requested later, incrementally.)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# 32-byte key, base64-encoded, used to encrypt OAuth tokens at rest (envelope encryption).
+# Generate with:  openssl rand -base64 32
+TOKEN_ENCRYPTION_KEY=""

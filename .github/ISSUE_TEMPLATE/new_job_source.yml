@@ -1,0 +1,24 @@
+name: New job source
+description: Propose a job source/API to support
+labels: ["job-source", "triage"]
+body:
+  - type: input
+    id: name
+    attributes: { label: Source name and URL }
+    validations: { required: true }
+  - type: dropdown
+    id: access
+    attributes:
+      label: Access method
+      options: [Official API, Public feed (RSS/JSON/XML), Public page permitted by robots.txt]
+    validations: { required: true }
+  - type: input
+    id: terms
+    attributes: { label: Link to terms of use / API policy }
+    validations: { required: true }
+  - type: input
+    id: regions
+    attributes: { label: Countries/regions covered, placeholder: "IN, REMOTE" }
+  - type: textarea
+    id: limits
+    attributes: { label: Documented rate limits / attribution requirements }

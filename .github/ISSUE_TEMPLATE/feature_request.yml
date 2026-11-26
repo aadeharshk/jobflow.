@@ -1,0 +1,18 @@
+name: Feature request
+description: Suggest an improvement
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes: { label: Problem, description: What are you trying to achieve? }
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes: { label: Proposed solution }
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Principles
+      options:
+        - label: This respects site terms (no scraping where forbidden, no CAPTCHA bypass, no auto-submitting third-party forms) and the 20 messages/24h cap.
+          required: true

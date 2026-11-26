@@ -1,6 +1,6 @@
 # Technology Decisions (Architecture Decision Records)
 
-> Status: **Proposed — awaiting approval (Phase 2 gate)**. Each ADR records context, decision, alternatives and consequences. Evidence links point to the research documents.
+> Status: **Approved by the owner on 2026-11-26 (Phase 2 gate), with the decisions and amendments recorded at the end of this file.** Each ADR records context, decision, alternatives and consequences.
 
 ---
 
@@ -18,7 +18,7 @@
 
 **Decision.** The API uses [Hono](https://github.com/honojs/hono) for routing and middleware, [chanfana](https://github.com/cloudflare/chanfana) for OpenAPI 3.1 generation, and [Zod](https://github.com/colinhacks/zod) for validation. The API reference in `docs/api/` is generated from code and never written by hand.
 
-**Why.** Hono is Workers-first and permissively licensed (MIT), and one language across the stack lowers the barrier for contributors. Most job-domain reference code is Python (JobSpy, ats-scrapers, Resume-Matcher), but none of it runs on Workers. Porting the *logic* to TS is the reuse path (see the matrix).
+**Why.** Hono is Workers-first and permissively licensed (MIT), and one language across the stack lowers the barrier for contributors. Most job-domain reference code is Python (JobSpy, ats-scrapers, Resume-Matcher), but none of it runs on Workers. Porting the _logic_ to TS is the reuse path (see the matrix).
 
 **Alternatives.** Rust (workers-rs: faster, but fewer contributors), itty-router (smaller ecosystem).
 
@@ -57,22 +57,25 @@
 ## ADR-007 — Gmail via OAuth with incremental, minimal scopes
 
 **Decision.**
+
 - **Sign-in:** better-auth Google provider with `openid email profile` only.
 - **Sending (incremental consent):** `https://www.googleapis.com/auth/gmail.send`.
 - **Reply detection (incremental consent, separate toggle):** a read scope limited to thread and metadata checks. The candidates are `gmail.metadata` (headers only, enough for auto-reply/bounce detection but no body for classification) and `gmail.readonly` (needed to quote-strip and classify reply bodies). Proposal: start with `gmail.readonly` scoped in code to JobFlow-sent `threadId`s only, and document exactly what is read.
 - **OAuth client library:** [arctic](https://github.com/pilcrowonpaper/arctic) (Google provider, PKCE, refresh). Gmail calls use `fetch` against the REST API. The `googleapis` Node package is avoided because it is Node-bound and heavy (research: [google-api-nodejs-client](https://github.com/googleapis/google-api-nodejs-client)).
 - **Change detection:** `users.history.list` polling from Cron every 10 minutes. `users.watch` push needs Google Cloud Pub/Sub, which would add non-Cloudflare infrastructure, so it is deferred.
 
-**Policy constraint (important).** From the authors' knowledge of Google's policy, `gmail.send` is a *sensitive* scope and `gmail.readonly` / `gmail.metadata` are *restricted* scopes. A public app requesting restricted scopes must pass Google OAuth verification **and** an annual third-party security assessment (CASA). Until then, an unverified app is limited to a small number of test users. *These Google pages could not be fetched from the research environment (network allow-list), so the classification must be re-confirmed on Google's official scope documentation before Phase 4.*
+**Policy constraint (important).** From the authors' knowledge of Google's policy, `gmail.send` is a _sensitive_ scope and `gmail.readonly` / `gmail.metadata` are _restricted_ scopes. A public app requesting restricted scopes must pass Google OAuth verification **and** an annual third-party security assessment (CASA). Until then, an unverified app is limited to a small number of test users. _These Google pages could not be fetched from the research environment (network allow-list), so the classification must be re-confirmed on Google's official scope documentation before Phase 4._
 
 **Consequences / strategy.**
+
 1. **Self-hosted users** create their own Google Cloud OAuth client (a step-by-step guide will ship in the docs). For personal use no verification is needed. This makes the open-source edition fully functional from day one.
-2. **The hosted JobFlow edition** launches send-only (sensitive scope, lighter verification) with *manual* reply logging. Automated reply detection is enabled once restricted-scope verification and the security assessment are complete. Budget time (weeks) and money for this.
+2. **The hosted JobFlow edition** launches send-only (sensitive scope, lighter verification) with _manual_ reply logging. Automated reply detection is enabled once restricted-scope verification and the security assessment are complete. Budget time (weeks) and money for this.
 3. All token handling follows the envelope-encryption design in the system architecture.
 
 ## ADR-008 — Durable Objects for the outbound governor and source limiter
 
 **Decision.**
+
 - `OutboundGovernor` (one per user, SQLite-backed) holds the rolling 24-hour send ledger, the pause flag, idempotency keys and follow-up alarms. It serialises every send.
 - `SourceLimiter` (one per source or domain) is a token bucket that enforces documented API limits and crawl politeness.
 
@@ -89,6 +92,7 @@
 ## ADR-010 — Compliance-first source policy
 
 **Decision.** A job source may be enabled only if:
+
 - its access method is an **official API, a published public feed, or a public page that robots.txt permits**;
 - its terms were reviewed (`terms_reviewed_at`, `terms_url`); and
 - its rate limits are encoded in `SourceLimiter`.
@@ -100,6 +104,7 @@ LinkedIn is supported only through user-provided URLs and the user's own LinkedI
 ## ADR-011 — Testing & quality gates
 
 **Decision.**
+
 - Vitest with `@cloudflare/vitest-pool-workers` for unit and integration tests inside the real Workers runtime, with local D1, R2, Queues and DO.
 - Recorded fixtures for every source adapter and Gmail call; no live network in CI.
 - Playwright E2E against `wrangler dev`.
@@ -112,6 +117,7 @@ LinkedIn is supported only through user-provided URLs and the user's own LinkedI
 **Recommendation:** **Apache-2.0.**
 
 **Why.**
+
 - Every proposed dependency is MIT or Apache-2.0, so they are compatible.
 - Apache-2.0's explicit patent grant reassures companies and contributors.
 - It maximises adoption, stars and contributions, and other developers can deploy JobFlow to their own Cloudflare accounts.
@@ -131,3 +137,46 @@ LinkedIn is supported only through user-provided URLs and the user's own LinkedI
 2. Hosted edition at launch: send-only with manual reply logging until Google restricted-scope verification is done? (Recommended.)
 3. Initial geographic focus for curated company seeding: India + remote-global first (fits the founder network and UPNXTWork), then the US/EU?
 4. Product name: keep "JobFlow"? (The name is common. A trademark and domain check is recommended before launch; see `launch-and-growth-strategy.md`.)
+
+---
+
+## Decisions recorded at the Phase 2 gate (2026-11-26)
+
+| Question                     | Owner decision                                                                                                                                                               |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Licence                      | **Apache-2.0** (ADR-012 accepted). `LICENSE`, `NOTICE` and `THIRD_PARTY_NOTICES.md` added                                                                                    |
+| Hosted Gmail scope at launch | **Send-only.** Replies are logged manually at first. Restricted Gmail scopes and Google verification are **not** launch dependencies (ADR-007 amended below)                 |
+| Target market                | **India + remote-global first**; source architecture stays country-extensible                                                                                                |
+| Branding                     | Run a preliminary trademark/domain check; keep "JobFlow" provisional; buy nothing until approved. Result: [`../product/brand-name-check.md`](../product/brand-name-check.md) |
+
+## ADR-007 (amended) — Send-only Gmail at launch
+
+The launch scope is `gmail.send` only (sensitive, not restricted), requested incrementally in Phase 6. Application status after sending (replied, interview, rejected) is updated **manually** by the user. The architecture keeps reply monitoring possible later without migrations or redesign:
+
+- `google_connections.history_id`, the `jobflow-inbox-sync` queue, the `inbox.sync` message contract and the `handleInboxSync` hook exist but are disabled.
+- Enabling monitoring later only needs incremental consent for a read scope, completed Google verification, and implementing the hook.
+
+## ADR-014 — Authentication implemented with arctic + first-party sessions (amends ADR-002/ADR-007's better-auth choice)
+
+**Context.** ADR-002 proposed better-auth. During Phase 3, the requirements turned out to be narrow: Google is the only identity provider, Gmail needs separate incremental consent later, and everything must run on Workers with no Node.js dependencies.
+
+**Decision.** Use [arctic](https://github.com/pilcrowonpaper/arctic) (MIT) for the Google OIDC authorization-code + PKCE flow, plus about 150 lines of first-party session code. Sessions are random 256-bit tokens, only their SHA-256 hash is stored in D1, cookies are `HttpOnly`/`SameSite=Lax`/`__Host-` and expiry is sliding. Ownership of incremental Gmail scopes stays explicit in our code.
+
+**Why.** It is a smaller dependency and attack surface, every security property is visible and unit-tested (`worker/test/auth.test.ts`), there is no ORM adapter layer to keep in sync with D1, and Phase 6 needs full control over token storage (envelope encryption).
+
+**Trade-off.** We maintain session code ourselves. Mitigation: the logic follows the widely reviewed Lucia/Copenhagen-book session pattern and is covered by tests (hashing, expiry, forgery, revocation, CSRF, open-redirect, OAuth state).
+
+## ADR-015 — Workers test runner: `@cloudflare/vitest-plugin`
+
+`@cloudflare/vitest-pool-workers` is deprecated and renamed to `@cloudflare/vitest-plugin`. Tests run inside workerd/Miniflare with real D1, R2, Queues and Durable Objects, and migrations are applied per run.
+
+## ADR-016 — OpenAPI generation deferred to Phase 4
+
+chanfana (ADR-002) is not adopted yet. Phase 3's 18 routes are validated with Zod via `@hono/zod-validator` and documented by hand in `docs/api/README.md`, with behaviour pinned by integration tests. In Phase 4, when public job-search endpoints arrive, routes move to a schema-first definition that generates OpenAPI 3.1 (chanfana or `@hono/zod-openapi`, chosen then).
+
+## ADR-017 — Toolchain pins and supply-chain hygiene
+
+- **npm 11.21.2** is required. npm 10.9 crashes (`Cannot read properties of null (reading 'edgesOut')`) when resolving vitest 4 peer dependencies. CI installs the pinned npm version.
+- All dependencies are exact-pinned. The selection rule is a release at least 14 days old. The one exception is `typescript-eslint` 8.74.0 (released 2026-11-23), adopted because it fixes a moderate ReDoS advisory (GHSA-g3hv-75wg-m249) in its `minimatch` dependency.
+- npm `allowScripts` permits install scripts only for `esbuild` and `workerd`.
+- GitHub Actions are pinned to full commit SHAs. Dependabot keeps them current.

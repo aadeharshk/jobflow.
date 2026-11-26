@@ -1,0 +1,8 @@
+dist
+node_modules
+.wrangler
+package-lock.json
+docs/research
+scripts/research
+playwright-report
+test-results

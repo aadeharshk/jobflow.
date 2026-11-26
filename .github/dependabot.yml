@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 10
+    groups:
+      cloudflare: { patterns: ["wrangler", "@cloudflare/*", "miniflare"] }
+      react: { patterns: ["react", "react-dom", "react-router", "@types/react*"] }
+      lint: { patterns: ["eslint*", "@eslint/*", "typescript-eslint", "prettier"] }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

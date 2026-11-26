@@ -4,3 +4,7 @@ dist/
 .dev.vars
 .env
 *.log
+playwright-report/
+test-results/
+.DS_Store
+coverage/

@@ -1,0 +1,128 @@
+// JobFlow — Cloudflare Worker configuration.
+// Placeholder IDs ("00000000-…") work for local development only.
+// Run `npm run cf:setup` (scripts/setup-cloudflare.sh) to create real resources, then paste their IDs.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jobflow",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": [],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+
+  // React SPA built by Vite. API routes always reach the Worker first.
+  "assets": {
+    "directory": "./dist/web",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_URL": "https://jobflow.example.workers.dev",
+    "AUTH_DEV_LOGIN": "false",
+    "MAX_RESUME_BYTES": "5242880",
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB_CORE",
+      "database_name": "jobflow-core",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "migrations/core",
+    },
+    {
+      "binding": "DB_JOBS",
+      "database_name": "jobflow-jobs",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+      "migrations_dir": "migrations/jobs",
+    },
+  ],
+
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "jobflow-files" }],
+
+  "queues": {
+    "producers": [
+      { "binding": "Q_DISCOVERY", "queue": "jobflow-discovery" },
+      { "binding": "Q_ENRICH_MATCH", "queue": "jobflow-enrich-match" },
+      { "binding": "Q_OUTBOUND", "queue": "jobflow-outbound" },
+      { "binding": "Q_INBOX_SYNC", "queue": "jobflow-inbox-sync" },
+    ],
+    "consumers": [
+      { "queue": "jobflow-discovery", "max_batch_size": 10, "max_retries": 3, "dead_letter_queue": "jobflow-dlq" },
+      { "queue": "jobflow-enrich-match", "max_batch_size": 10, "max_retries": 3, "dead_letter_queue": "jobflow-dlq" },
+      { "queue": "jobflow-outbound", "max_batch_size": 5, "max_retries": 3, "dead_letter_queue": "jobflow-dlq" },
+      { "queue": "jobflow-inbox-sync", "max_batch_size": 10, "max_retries": 3, "dead_letter_queue": "jobflow-dlq" },
+    ],
+  },
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "OUTBOUND_GOVERNOR", "class_name": "OutboundGovernor" },
+      { "name": "SOURCE_LIMITER", "class_name": "SourceLimiter" },
+    ],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["OutboundGovernor", "SourceLimiter"] }],
+
+  // Workers Rate Limiting binding (per-location counters; best-effort abuse protection).
+  "ratelimits": [
+    { "name": "AUTH_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "API_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } },
+  ],
+
+  // Hourly discovery (no-op until Phase 4 adds sources) and daily maintenance.
+  "triggers": { "crons": ["0 * * * *", "30 3 * * *"] },
+
+  "env": {
+    "staging": {
+      "name": "jobflow-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "APP_URL": "https://jobflow-staging.example.workers.dev",
+        "AUTH_DEV_LOGIN": "false",
+        "MAX_RESUME_BYTES": "5242880",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB_CORE",
+          "database_name": "jobflow-core-staging",
+          "database_id": "00000000-0000-0000-0000-000000000011",
+          "migrations_dir": "migrations/core",
+        },
+        {
+          "binding": "DB_JOBS",
+          "database_name": "jobflow-jobs-staging",
+          "database_id": "00000000-0000-0000-0000-000000000012",
+          "migrations_dir": "migrations/jobs",
+        },
+      ],
+      "r2_buckets": [{ "binding": "FILES", "bucket_name": "jobflow-files-staging" }],
+      "queues": {
+        "producers": [
+          { "binding": "Q_DISCOVERY", "queue": "jobflow-discovery-staging" },
+          { "binding": "Q_ENRICH_MATCH", "queue": "jobflow-enrich-match-staging" },
+          { "binding": "Q_OUTBOUND", "queue": "jobflow-outbound-staging" },
+          { "binding": "Q_INBOX_SYNC", "queue": "jobflow-inbox-sync-staging" },
+        ],
+        "consumers": [
+          { "queue": "jobflow-discovery-staging", "max_retries": 3, "dead_letter_queue": "jobflow-dlq-staging" },
+          { "queue": "jobflow-enrich-match-staging", "max_retries": 3, "dead_letter_queue": "jobflow-dlq-staging" },
+          { "queue": "jobflow-outbound-staging", "max_batch_size": 5, "max_retries": 3, "dead_letter_queue": "jobflow-dlq-staging" },
+          { "queue": "jobflow-inbox-sync-staging", "max_retries": 3, "dead_letter_queue": "jobflow-dlq-staging" },
+        ],
+      },
+      "durable_objects": {
+        "bindings": [
+          { "name": "OUTBOUND_GOVERNOR", "class_name": "OutboundGovernor" },
+          { "name": "SOURCE_LIMITER", "class_name": "SourceLimiter" },
+        ],
+      },
+      "ratelimits": [
+        { "name": "AUTH_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "API_RATE_LIMITER", "namespace_id": "2002", "simple": { "limit": 300, "period": 60 } },
+      ],
+      "triggers": { "crons": ["0 * * * *", "30 3 * * *"] },
+    },
+  },
+}

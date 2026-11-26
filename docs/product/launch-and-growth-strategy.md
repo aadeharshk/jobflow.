@@ -4,14 +4,15 @@
 
 ## 1. Product identity
 
-- **Working name:** JobFlow. *Risk:* the name is generic and likely already used by other products and domains. Before investing in branding, run a trademark search (India IP office, USPTO, EUIPO), a domain check and a GitHub/npm name check. Have 2–3 backup names ready that suggest *intelligence + trust* rather than spam-volume automation.
-- **Promise (one line):** *"Find the right jobs worldwide, apply with your approval, and follow up once, from your own Gmail."*
+- **Working name:** JobFlow. _Risk:_ the name is generic and likely already used by other products and domains. Before investing in branding, run a trademark search (India IP office, USPTO, EUIPO), a domain check and a GitHub/npm name check. Have 2–3 backup names ready that suggest _intelligence + trust_ rather than spam-volume automation.
+- **Promise (one line):** _"Find the right jobs worldwide, apply with your approval, and follow up once, from your own Gmail."_
 - **Brand pillars:** Transparent (every score explained) · Respectful (20/day cap, human approval) · Private (your data, exportable, deletable) · Open (self-host on Cloudflare in minutes).
 - **Visual identity:** one accent colour, a neutral palette, light and dark themes, a calm and premium look. Dashboard screenshots must show real UI with clearly labelled demo data.
 
 ## 2. Landing page (Phase 9, drafted in Phase 8)
 
 Structure:
+
 1. **Hero:** the promise, a "Get started free" button, a "Self-host on Cloudflare" button, and a 20-second product loop.
 2. **Problem:** hours on job boards, unanswered applications, spammy auto-apply tools.
 3. **How it works:** Profile → Matches with reasons → Approve → Gmail send → Reply detection → One follow-up.
@@ -35,16 +36,16 @@ Structure:
 
 ## 5. Launch sequence
 
-| Week | Action | Channel |
-|---|---|---|
-| −6 to −2 | Build in public: weekly progress posts (architecture decisions, compliance stance, research findings) | LinkedIn (Harsh's primary network), X, dev.to/Hashnode |
-| −4 | Private beta: 20–50 job seekers from the personal network, college groups and UPNXTWork users; weekly feedback calls | Direct outreach, WhatsApp/Telegram communities (with admin permission) |
-| −2 | Fix the top 5 friction points; record the walkthrough; finalise the landing page | — |
-| 0 (Tue/Wed) | **Product Hunt** launch: maker comment explaining the "trustworthy automation" angle; reply to every comment personally | Product Hunt |
-| 0 | **Show HN** focused on the Cloudflare-only architecture and the compliance-first design | Hacker News |
-| 0–1 | Subreddits where self-promotion is permitted and rules are followed: r/selfhosted (self-host angle), r/CloudFlare (architecture), r/cscareerquestions / r/developersIndia (only in allowed threads), r/opensource | Reddit |
-| 0–2 | Technical deep-dive posts: "Enforcing a hard 20-emails/24h cap with Durable Objects"; "Gmail API on Cloudflare Workers without googleapis"; "Explainable job matching with FTS5 + embeddings" | dev.to, Hashnode, Cloudflare community, LinkedIn articles |
-| 2+ | Partnerships: college placement cells, bootcamps, career coaches (team edition); a cross-link with UPNXTWork | Direct |
+| Week        | Action                                                                                                                                                                                                            | Channel                                                                |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| −6 to −2    | Build in public: weekly progress posts (architecture decisions, compliance stance, research findings)                                                                                                             | LinkedIn (Harsh's primary network), X, dev.to/Hashnode                 |
+| −4          | Private beta: 20–50 job seekers from the personal network, college groups and UPNXTWork users; weekly feedback calls                                                                                              | Direct outreach, WhatsApp/Telegram communities (with admin permission) |
+| −2          | Fix the top 5 friction points; record the walkthrough; finalise the landing page                                                                                                                                  | —                                                                      |
+| 0 (Tue/Wed) | **Product Hunt** launch: maker comment explaining the "trustworthy automation" angle; reply to every comment personally                                                                                           | Product Hunt                                                           |
+| 0           | **Show HN** focused on the Cloudflare-only architecture and the compliance-first design                                                                                                                           | Hacker News                                                            |
+| 0–1         | Subreddits where self-promotion is permitted and rules are followed: r/selfhosted (self-host angle), r/CloudFlare (architecture), r/cscareerquestions / r/developersIndia (only in allowed threads), r/opensource | Reddit                                                                 |
+| 0–2         | Technical deep-dive posts: "Enforcing a hard 20-emails/24h cap with Durable Objects"; "Gmail API on Cloudflare Workers without googleapis"; "Explainable job matching with FTS5 + embeddings"                     | dev.to, Hashnode, Cloudflare community, LinkedIn articles              |
+| 2+          | Partnerships: college placement cells, bootcamps, career coaches (team edition); a cross-link with UPNXTWork                                                                                                      | Direct                                                                 |
 
 **Product Hunt checklist:** hunter (or self-hunt), tagline under 60 characters, 4–6 gallery images of real UI with demo data, the video, a first comment, an offer for PH users (e.g. extended Pro trial). Never ask for upvotes in groups, which violates PH rules.
 
@@ -58,6 +59,7 @@ Structure:
 ## 7. Analytics for activation & retention
 
 Instrumented with first-party events (ADR-013). Weekly review of:
+
 - the activation funnel (sign-up → profile confirmed → 5 matches viewed → Gmail connected → first approved application),
 - week-1/week-4 retention,
 - reply and interview rate per 100 applications,
@@ -73,10 +75,10 @@ Instrumented with first-party events (ADR-013). Weekly review of:
 
 ## 9. Risks & mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Google restricted-scope verification delays hosted reply detection | Launch send-only with manual reply logging; self-host path fully functional; start verification early (Phase 7) |
-| A job source changes its terms or API | Source registry with `terms_reviewed_at`; adapters are isolated and can be disabled by a flag; fixture tests detect schema drift |
-| Users expect "auto-apply to 500 jobs" | Clear messaging: quality over volume; show that reply-rate analytics beat spray-and-pray |
-| Name conflict | Trademark/domain check before any branding spend |
-| LLM hallucination in applications | Fact-check pass against the confirmed profile; the user approves every send |
+| Risk                                                               | Mitigation                                                                                                                       |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Google restricted-scope verification delays hosted reply detection | Launch send-only with manual reply logging; self-host path fully functional; start verification early (Phase 7)                  |
+| A job source changes its terms or API                              | Source registry with `terms_reviewed_at`; adapters are isolated and can be disabled by a flag; fixture tests detect schema drift |
+| Users expect "auto-apply to 500 jobs"                              | Clear messaging: quality over volume; show that reply-rate analytics beat spray-and-pray                                         |
+| Name conflict                                                      | Trademark/domain check before any branding spend                                                                                 |
+| LLM hallucination in applications                                  | Fact-check pass against the confirmed profile; the user approves every send                                                      |

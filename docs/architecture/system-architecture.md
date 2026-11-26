@@ -83,7 +83,7 @@ queue consumer ─▶ SourceLimiter DO grants a token (per-source rate + per-dom
                ─▶ enqueue changed job IDs on `enrich-match`
 ```
 
-- Each source row stores `min_interval_minutes`. The default is 60, but it is raised when a source's documented limits or terms ask for less frequent polling. "Hourly" therefore means *hourly where permitted*.
+- Each source row stores `min_interval_minutes`. The default is 60, but it is raised when a source's documented limits or terms ask for less frequent polling. "Hourly" therefore means _hourly where permitted_.
 - Company boards are tiered. Companies that posted in the last 14 days are checked every hour; others drop back to every 6 hours. This keeps queue volume roughly proportional to hiring activity.
 - Jobs are **shared across users**. Each source is fetched once, however many users JobFlow has. This is the main cost and scale lever.
 - Career-page discovery: given a company domain, JobFlow checks robots.txt, fetches `/careers`-style pages, detects the ATS vendor from links or iframes (pattern adapted from the ats-scrapers discovery rules), and records the board slug so future fetches use the public API.
@@ -92,15 +92,15 @@ queue consumer ─▶ SourceLimiter DO grants a token (per-source rate + per-dom
 
 For each changed job, against the users whose saved searches pass the hard filters:
 
-| Component | Weight (default) | Explanation shown to user |
-|---|---:|---|
-| Hard filters | gate | "Excluded: requires on-site in Berlin; you chose remote-only" |
-| Title & seniority fit | 25 | "Senior Data Engineer ≈ your target 'Data Engineer (mid–senior)'" |
-| Skills overlap (lexical, FTS5 + synonyms) | 30 | "Matched 7/10 required skills: SQL, Python, Airflow… Missing: dbt, Snowflake" |
-| Semantic similarity (embeddings, `bge-m3`) | 20 | "Responsibilities closely match your 'Pipelines at X' experience" |
-| Location / remote / time zone | 10 | "Remote (EMEA) — compatible with IST ±5h" |
-| Freshness & liveness | 10 | "Posted 6 h ago, still open" |
-| Salary & sponsorship signals | 5 | "Salary range disclosed; above your floor" |
+| Component                                  | Weight (default) | Explanation shown to user                                                     |
+| ------------------------------------------ | ---------------: | ----------------------------------------------------------------------------- |
+| Hard filters                               |             gate | "Excluded: requires on-site in Berlin; you chose remote-only"                 |
+| Title & seniority fit                      |               25 | "Senior Data Engineer ≈ your target 'Data Engineer (mid–senior)'"             |
+| Skills overlap (lexical, FTS5 + synonyms)  |               30 | "Matched 7/10 required skills: SQL, Python, Airflow… Missing: dbt, Snowflake" |
+| Semantic similarity (embeddings, `bge-m3`) |               20 | "Responsibilities closely match your 'Pipelines at X' experience"             |
+| Location / remote / time zone              |               10 | "Remote (EMEA) — compatible with IST ±5h"                                     |
+| Freshness & liveness                       |               10 | "Posted 6 h ago, still open"                                                  |
+| Salary & sponsorship signals               |                5 | "Salary range disclosed; above your floor"                                    |
 
 Embeddings are stored as compact `BLOB`s in D1 (jobs DB). Similarity is computed in the Worker over the candidate set left after the filters and FTS5 (typically ≤ 500 rows). An optional LLM rubric re-ranks only the top 20 per user per day, which keeps AI cost bounded. Vectorize is an optional later upgrade if candidate sets grow (see ADR-005).
 
@@ -144,6 +144,7 @@ The Durable Object makes the 20/24h rule **strongly consistent per user**, even 
 Two databases keep each under D1's 10 GB per-database limit and separate shared public data from private user data.
 
 **`jobflow-jobs` (shared, public-source data)**
+
 - `sources(id, kind, name, base_url, access_method, terms_url, terms_reviewed_at, min_interval_minutes, next_check_at, etag, last_status, enabled)`
 - `companies(id, name, domain, ats_vendor, ats_slug, careers_url, country, last_seen_at)`
 - `jobs(id, source_id, company_id, external_id, title, normalized_title, seniority, employment_type, locations_json, remote_type, countries_json, salary_min, salary_max, salary_currency, salary_period, description_text, description_r2_key, apply_url, posted_at, first_seen_at, last_seen_at, closed_at, content_hash, embedding BLOB)` with a unique key `(source_id, external_id)` and indexes on `(closed_at, posted_at)` and `(company_id)`
@@ -151,6 +152,7 @@ Two databases keep each under D1's 10 GB per-database limit and separate shared 
 - `public_contacts(id, company_id, job_id NULL, email, name NULL, role NULL, source_url, captured_at, method)`. `method ∈ {posting_text, json_ld, careers_page}`
 
 **`jobflow-core` (private user data)**
+
 - `users`, `sessions`, `accounts` (better-auth tables)
 - `google_connections(user_id, scopes, refresh_token_ciphertext, dek_wrapped, history_id, connected_at, revoked_at)`
 - `profiles(user_id, headline, summary, years_experience, skills_json, experience_json, education_json, locations_json, remote_pref, work_auth_json, salary_floor, seniority_targets_json, confirmed_at)`
@@ -169,18 +171,18 @@ The full schema and migrations will live in `migrations/` with documentation in 
 
 ## 5. Security & privacy architecture
 
-| Concern | Control |
-|---|---|
+| Concern               | Control                                                                                                                                                                                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Google refresh tokens | Envelope encryption: a per-user data key (AES-256-GCM, Web Crypto) encrypts the token, and the data key is wrapped by a key-encryption key held in **Cloudflare Secrets**. Ciphertext only in D1. Key rotation by re-wrapping |
-| Least privilege | Sign-in uses only `openid email profile`. Gmail scopes are requested incrementally and only when the user enables sending. Read access is scoped to thread checks (ADR-007) |
-| Data minimisation | JobFlow stores message IDs, thread IDs, headers needed for classification, and the quote-stripped reply text (user-deletable). It never stores the user's unrelated mail |
-| Résumé files | Private R2 bucket; access only through authenticated Worker routes that check ownership; no public URLs |
-| Web security | Secure, HttpOnly, SameSite=Lax session cookies; CSRF protection on state-changing routes; strict CSP; `secure-headers` middleware; input validated with Zod |
-| Abuse prevention | 20/24h governor, per-recipient de-duplication (no second initial email to the same address within 30 days), suppression list, pause switch, rate-limited API (Workers Rate Limiting binding) |
-| Compliance with sites | Source registry with `terms_reviewed_at`; robots.txt honoured; identifiable User-Agent with a contact URL; no CAPTCHA solving, no stealth browsers, no logged-in third-party automation, no LinkedIn scraping |
-| LLM safety | Job descriptions and emails are untrusted input. Prompts isolate them as data; outputs are schema-validated; generated claims are checked against the profile |
-| User rights | Export all data (JSON + files ZIP); delete account (D1 rows, R2 objects, revoke Google token) |
-| Observability | Workers Logs with PII redaction; error tracking via `console.error` + Logpush (optional); alerting on DLQ depth |
+| Least privilege       | Sign-in uses only `openid email profile`. Gmail scopes are requested incrementally and only when the user enables sending. Read access is scoped to thread checks (ADR-007)                                                   |
+| Data minimisation     | JobFlow stores message IDs, thread IDs, headers needed for classification, and the quote-stripped reply text (user-deletable). It never stores the user's unrelated mail                                                      |
+| Résumé files          | Private R2 bucket; access only through authenticated Worker routes that check ownership; no public URLs                                                                                                                       |
+| Web security          | Secure, HttpOnly, SameSite=Lax session cookies; CSRF protection on state-changing routes; strict CSP; `secure-headers` middleware; input validated with Zod                                                                   |
+| Abuse prevention      | 20/24h governor, per-recipient de-duplication (no second initial email to the same address within 30 days), suppression list, pause switch, rate-limited API (Workers Rate Limiting binding)                                  |
+| Compliance with sites | Source registry with `terms_reviewed_at`; robots.txt honoured; identifiable User-Agent with a contact URL; no CAPTCHA solving, no stealth browsers, no logged-in third-party automation, no LinkedIn scraping                 |
+| LLM safety            | Job descriptions and emails are untrusted input. Prompts isolate them as data; outputs are schema-validated; generated claims are checked against the profile                                                                 |
+| User rights           | Export all data (JSON + files ZIP); delete account (D1 rows, R2 objects, revoke Google token)                                                                                                                                 |
+| Observability         | Workers Logs with PII redaction; error tracking via `console.error` + Logpush (optional); alerting on DLQ depth                                                                                                               |
 
 ## 6. Repository layout (proposed)
 
